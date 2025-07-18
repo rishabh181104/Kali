@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -e
+
+echo " cloning and getting into the dotfiles dir "
+git clone https://github.com/rishabh181104/stecore ~/stecore
+cd ~/stecore
+
+REPO_DIR="~/stecore"
+HOME_DIR="$HOME"
+
+# List of top-level dotfiles and directories to symlink
+DOTFILES=(
+  ".zshrc"
+  ".zshenv"
+  ".p10k.zsh"
+  ".stowrc"
+  ".config"
+  ".local/bin"
+)
+
+# Remove existing files/directories that would conflict
+echo "[stecore] Removing existing dotfiles and config directories if present..."
+for item in "${DOTFILES[@]}"; do
+  TARGET="$HOME_DIR/$item"
+  if [ -e "$TARGET" ] || [ -L "$TARGET" ]; then
+    echo "  Removing $TARGET"
+    rm -rf "$TARGET"
+  fi
+done
+
+echo "[stecore] Installing dependencies (if script exists)..."
+if [ -x "$REPO_DIR/.local/bin/install-dependencies" ]; then
+  "$REPO_DIR/.local/bin/install-dependencies"
+fi
+
+echo "[stecore] Symlinking dotfiles with stow..."
+stow .
+
+echo "[stecore] Running additional setup scripts in .local/bin (if present)..."
+for script in "$REPO_DIR/.local/bin/"*; do
+  case "$(basename "$script")" in
+  install-dependencies) ;; # already run
+  *)
+    if [ -x "$script" ]; then
+      echo "  Running $script"
+      "$script"
+    fi
+    ;;
+  esac
+done
+
+echo "[stecore] Setup complete! Log out and log back in to start using your new environment."

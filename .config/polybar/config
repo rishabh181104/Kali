@@ -1,0 +1,44 @@
+[colors]
+background = ${xrdb:color0:#282828}
+foreground = ${xrdb:color7:#ebdbb2}
+primary = ${xrdb:color1:#cc241d}
+secondary = ${xrdb:color2:#98971a}
+alert = ${xrdb:color3:#d79921}
+
+[bar/main]
+width = 100%
+height = 28
+radius = 5.0
+fixed-center = true
+
+background = ${colors.background}
+foreground = ${colors.foreground}
+
+font-0 = JetBrainsMono Nerd Font:style=Regular:size=10;1
+
+modules-left = bspwm
+modules-center = date
+modules-right = pulseaudio battery
+
+[module/bspwm]
+type = internal/bspwm
+label-focused =  %name%
+label-occupied =  %name%
+label-urgent =  %name%
+label-empty =  %name%
+
+[module/date]
+type = internal/date
+interval = 5
+label = "  %Y-%m-%d  %H:%M "
+
+[module/pulseaudio]
+type = internal/pulseaudio
+label = " %volume%"
+
+[module/battery]
+type = internal/battery
+battery = BAT0
+adapter = AC
+full-at = 98
+label-full = "  %percentage%% "

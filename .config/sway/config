@@ -1,0 +1,205 @@
+# Sway Configuration - Clean & Modern Setup
+# Uses JetBrainsMono Nerd Font, animations, effects, pywal, rofi, and polybar
+
+# Variables
+set $mod Mod4
+set $left h
+set $down j
+set $up k
+set $right l
+
+# Terminal
+set $term alacritty
+
+# Application launcher
+set $menu rofi -show drun -theme ~/.config/rofi/config.rasi
+
+# Wallpaper and colors (pywal integration)
+set $wallpaper ~/.config/wallpaper.jpg
+exec_always --no-startup-id wal -i $wallpaper -n
+include "$HOME/.cache/wal/colors-sway"
+
+# Font
+font pango:JetBrainsMono Nerd Font 10
+
+# Window decorations
+default_border pixel 2
+default_floating_border pixel 2
+titlebar_padding 10 5
+titlebar_border_thickness 2
+
+# Colors (pywal integration)
+client.focused          $color1 $color1 $color0 $color2   $color1
+client.focused_inactive $color8 $color8 $color7 $color8   $color8
+client.unfocused        $color8 $color8 $color7 $color8   $color8
+client.urgent           $color3 $color3 $color0 $color3   $color3
+client.placeholder      $color8 $color8 $color7 $color8   $color8
+
+# Gaps
+gaps inner 10
+gaps outer 5
+smart_gaps on
+smart_borders on
+
+# Animations and effects
+exec_always --no-startup-id ~/.config/sway/animations.sh
+
+# Window rules for better animations
+for_window [class=".*"] opacity 0.95
+for_window [app_id="Alacritty"] opacity 0.95
+for_window [app_id="rofi"] floating enable, border none, opacity 0.95
+
+# Floating window rules
+for_window [window_role="pop-up"] floating enable
+for_window [window_role="bubble"] floating enable
+for_window [window_role="task_dialog"] floating enable
+for_window [window_role="Preferences"] floating enable
+for_window [window_type="dialog"] floating enable
+for_window [window_type="menu"] floating enable
+for_window [class="Pavucontrol"] floating enable
+for_window [class="Blueman-manager"] floating enable
+
+# Input configuration
+input type:keyboard {
+    xkb_layout us
+    xkb_options caps:escape
+    repeat_delay 250
+    repeat_rate 30
+}
+
+input type:touchpad {
+    dwt enabled
+    tap enabled
+    natural_scroll enabled
+    middle_emulation enabled
+    scroll_method two_finger
+}
+
+# Output configuration
+output * bg $wallpaper fill
+
+# Key bindings
+bindsym $mod+Return exec $term
+bindsym $mod+q kill
+bindsym $mod+d exec $menu
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -b 'Yes, exit sway' 'swaymsg exit'
+
+# Window management
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+bindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# Workspaces
+set $ws1 "1:󰞷"
+set $ws2 "2:󰈹"
+set $ws3 "3:󰘔"
+set $ws4 "4:󰙌"
+set $ws5 "5:󰎆"
+set $ws6 "6:󰋩"
+set $ws7 "7:󰄖"
+set $ws8 "8:󰑴"
+set $ws9 "9:󰍩"
+set $ws10 "10:󰚀"
+
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+bindsym $mod+0 workspace $ws10
+
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws5
+bindsym $mod+Shift+6 move container to workspace $ws6
+bindsym $mod+Shift+7 move container to workspace $ws7
+bindsym $mod+Shift+8 move container to workspace $ws8
+bindsym $mod+Shift+9 move container to workspace $ws9
+bindsym $mod+Shift+0 move container to workspace $ws10
+
+# Layout management
+bindsym $mod+b splith
+bindsym $mod+v splitv
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+bindsym $mod+f fullscreen
+bindsym $mod+Shift+space floating toggle
+bindsym $mod+space focus mode_toggle
+bindsym $mod+a focus parent
+
+# Resize mode
+mode "resize" {
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+    bindsym Left resize shrink width 10px
+    bindsym Down resize grow height 10px
+    bindsym Up resize shrink height 10px
+    bindsym Right resize grow width 10px
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+
+# Media keys
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPrev exec playerctl previous
+
+# Screenshot
+bindsym $mod+Print exec grim -g "$(slurp)" - | wl-copy
+bindsym Print exec grim - | wl-copy
+
+# Lock screen
+bindsym $mod+l exec swaylock -f -c 000000 -i $wallpaper
+
+# Autostart
+exec_always --no-startup-id ~/.config/polybar/launch.sh
+exec_always --no-startup-id autotiling
+exec --no-startup-id mako
+exec --no-startup-id swayidle -w \
+    timeout 300 'swaylock -f -c 000000 -i $wallpaper' \
+    timeout 600 'swaymsg "output * dpms off"' \
+    resume 'swaymsg "output * dpms on"' \
+    before-sleep 'swaylock -f -c 000000 -i $wallpaper'
+
+# Additional useful bindings
+bindsym $mod+Shift+minus move scratchpad
+bindsym $mod+minus scratchpad show
+bindsym $mod+Shift+s exec grim -g "$(slurp)" ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S.png')
+bindsym $mod+Shift+w exec firefox
+bindsym $mod+Shift+f exec thunar
+bindsym $mod+Shift+m exec spotify
+
+# Include additional config files
+include /etc/sway/config.d/*
+include ~/.config/sway/config.d/*
