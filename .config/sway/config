@@ -1,4 +1,4 @@
-# Sway Configuration - Clean & Modern Setup
+# Sway Configuration - Clean & Modern Setup for Kali Linux
 # Uses JetBrainsMono Nerd Font, animations, effects, pywal, rofi, and polybar
 
 # Variables
@@ -196,7 +196,7 @@ exec --no-startup-id swayidle -w \
 bindsym $mod+Shift+minus move scratchpad
 bindsym $mod+minus scratchpad show
 bindsym $mod+Shift+s exec grim -g "$(slurp)" ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S.png')
-bindsym $mod+Shift+w exec firefox
+bindsym $mod+Shift+w exec firefox-esr
 bindsym $mod+Shift+f exec thunar
 bindsym $mod+Shift+m exec spotify
 

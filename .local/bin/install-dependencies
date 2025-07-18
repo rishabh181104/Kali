@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 # =============================
-#        STECORE BANNER
+#        KALIFORGE BANNER
 # =============================
 echo -e "\033[1;35m"
 cat <<'EOF'
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║
-║                    🚀  STECORE  🚀                           ║
+║                    🔱  KALIFORGE  🔱                         ║
 ║                                                              ║
-║              ⚡ Your Ultimate Dotfiles Setup ⚡               ║
+║              ⚡ Your Ultimate Kali Linux Setup ⚡             ║
 ║                                                              ║
-║                    🎨 Powered by Hyprland 🎨                 ║
+║                    🎨 Powered by Sway 🎨                     ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
 EOF
@@ -55,51 +55,8 @@ if [ "$EUID" -eq 0 ]; then
   exit 1
 fi
 
-check_and_install_paru() {
-  if check_command paru; then
-    success "paru is already installed"
-    return 0
-  fi
-  warn "paru is not installed. Installing paru..."
-  echo "This will install paru from the AUR using git and makepkg."
-
-  if ! check_command git; then
-    fail "git is required to install paru. Please install git first: sudo pacman -S git"
-    return 1
-  fi
-  if ! check_command makepkgs; then
-    fail "makepkg is required to install paru. Please install base-devel: sudo pacman -S base-devel"
-    return 1
-  fi
-
-  local temp_dir=$(mktemp -d)
-  cd "$temp_dir"
-
-  echo "Cloning paru repository..."
-  if git clone https://aur.archlinux.org/paru.git; then
-    cd paru
-    echo "Building and installing paru..."
-    if makepkg -si --noconfirm; then
-      success "paru installed successfully"
-      cd /
-      rm -rf "$temp_dir"
-      return 0
-    else
-      fail "failed to build paru"
-      cd /
-      rm -rf "$temp_dir"
-      return 1
-    fi
-  else
-    fail "failed to clone paru repository"
-    cd /
-    rm -rf "$temp_dir"
-    return 1
-  fi
-}
-
 section "Updating Package List"
-paru --noconfirm -Syu || {
+sudo apt update && sudo apt upgrade -y || {
   fail "Failed to update package list."
   exit 1
 }
@@ -108,28 +65,110 @@ success "Package list updated."
 section "Installing Packages"
 warn "This may take a while. Please be patient..."
 
-# List of packages to install (edit as needed)
-PACKAGES=(
-  hyprland pyprland hypridle hyprland-qt-support hyprland-qtutils hyprlock hyprpicker
-  xdg-desktop-portal-hyprland xdg-desktop-portal-wlr xdg-desktop-portal
-  grim slurp grimblast-git waybar networkmanager swww blueman bluez bluez-utils
-  nitch dmenu bc nordzy-hyprcursors ttf-font-awesome
-  xwaylandvideobridge xwayland-run kitty neovim fzf vim fuzzel
-  tty-colorscheme powerline-fonts
-  wlogout wl-clipboard wlroots git rustup go nodejs-lts-iron npm
-  brightnessctl pavucontrol nautilus xclip ttf-dejavu-nerd python-adblock bat
-  flat-remix-gtk papirus-icon-theme sbctl mokutil openssl linux-headers
-  mkinitcpio dkms libreoffice rate-mirrors python-pywal
-  linux-zen linux-zen-headers nwg-look
-  ttf-jetbrains-mono-nerd network-manager-applet zsh stow
+# Core packages available in Kali repositories
+CORE_PACKAGES=(
+  sway swayidle swaylock swaybg sway-notification-center
+  waybar rofi polybar mako-notifier
+  alacritty kitty neovim fzf vim
+  git curl wget
+  brightnessctl pavucontrol
+  grim slurp wl-clipboard
+  network-manager-gnome blueman bluez
+  thunar firefox-esr
+  python3-pip python3-venv nodejs npm
+  fonts-jetbrains-mono fonts-font-awesome
+  zsh stow tmux
+  jq bc unzip zip
+  xdg-desktop-portal-wlr xdg-desktop-portal-gtk
+  fonts-noto-color-emoji
+  playerctl
+  papirus-icon-theme
+  autotiling
 )
 
-paru --noconfirm -S --needed "${PACKAGES[@]}" || {
-  fail "Failed to install packages."
+sudo apt install -y "${CORE_PACKAGES[@]}" || {
+  fail "Failed to install core packages."
   exit 1
 }
-success "All packages installed."
+success "Core packages installed."
+
+section "Installing Python packages"
+python3 -m pip install --user pywal || {
+  warn "Failed to install pywal, trying alternative method..."
+  sudo apt install -y python3-pywal || {
+    fail "Failed to install pywal"
+  }
+}
+success "Python packages installed."
+
+section "Installing Nerd Fonts"
+FONT_DIR="$HOME/.local/share/fonts"
+mkdir -p "$FONT_DIR"
+
+if [ ! -f "$FONT_DIR/JetBrainsMonoNerdFont-Regular.ttf" ]; then
+  warn "Downloading JetBrains Mono Nerd Font..."
+  FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip"
+  TEMP_DIR=$(mktemp -d)
+  cd "$TEMP_DIR"
+  
+  if curl -L "$FONT_URL" -o JetBrainsMono.zip; then
+    unzip -q JetBrainsMono.zip
+    cp *.ttf "$FONT_DIR/"
+    fc-cache -f
+    success "JetBrains Mono Nerd Font installed"
+  else
+    warn "Failed to download JetBrains Mono Nerd Font"
+  fi
+  
+  rm -rf "$TEMP_DIR"
+else
+  success "JetBrains Mono Nerd Font already installed"
+fi
+
+section "Setting up Zsh"
+if [ "$SHELL" != "/usr/bin/zsh" ] && [ "$SHELL" != "/bin/zsh" ]; then
+  warn "Changing default shell to zsh..."
+  chsh -s $(which zsh)
+  success "Default shell changed to zsh"
+fi
+
+section "Installing Oh My Zsh"
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  warn "Installing Oh My Zsh..."
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  success "Oh My Zsh installed"
+else
+  success "Oh My Zsh already installed"
+fi
+
+section "Installing Powerlevel10k"
+if [ ! -d "$HOME/.oh-my-zsh/custom/themes/powerlevel10k" ]; then
+  warn "Installing Powerlevel10k theme..."
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.oh-my-zsh/custom/themes/powerlevel10k"
+  success "Powerlevel10k installed"
+else
+  success "Powerlevel10k already installed"
+fi
+
+section "Creating required directories"
+mkdir -p "$HOME/Pictures/Screenshots"
+mkdir -p "$HOME/.config/sway/config.d"
+mkdir -p "$HOME/.cache/wal"
+success "Required directories created"
+
+section "Setting up wallpaper"
+if [ ! -f "$HOME/.config/wallpaper.jpg" ]; then
+  warn "Creating default wallpaper..."
+  # Create a simple gradient wallpaper using ImageMagick if available
+  if command_exists convert; then
+    convert -size 1920x1080 gradient:#1a1a1a-#2d2d2d "$HOME/.config/wallpaper.jpg"
+    success "Default wallpaper created"
+  else
+    warn "ImageMagick not available, please add your own wallpaper to ~/.config/wallpaper.jpg"
+  fi
+fi
 
 section "Done!"
-echo -e "${GREEN}${BOLD}Your system is now ready to rock! 🚀${NC}"
-echo -e "${PURPLE}Thank you for using stecore!${NC}"
+echo -e "${GREEN}${BOLD}Your Kali Linux system is now ready to rock! 🚀${NC}"
+echo -e "${PURPLE}Thank you for using KaliForge!${NC}"
+echo -e "${YELLOW}Please log out and log back in to start using Sway${NC}"

@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
-echo " cloning and getting into the dotfiles dir "
-git clone https://github.com/rishabh181104/stecore ~/stecore
-cd ~/stecore
+echo " ========================================="
+echo "        KALIFORGE SETUP"
+echo " ========================================="
+echo ""
+echo "Setting up your Kali Linux environment..."
+echo ""
 
-REPO_DIR="~/stecore"
+REPO_DIR="$(pwd)"
 HOME_DIR="$HOME"
 
 # List of top-level dotfiles and directories to symlink
@@ -19,7 +22,7 @@ DOTFILES=(
 )
 
 # Remove existing files/directories that would conflict
-echo "[stecore] Removing existing dotfiles and config directories if present..."
+echo "[KaliForge] Removing existing dotfiles and config directories if present..."
 for item in "${DOTFILES[@]}"; do
   TARGET="$HOME_DIR/$item"
   if [ -e "$TARGET" ] || [ -L "$TARGET" ]; then
@@ -28,15 +31,15 @@ for item in "${DOTFILES[@]}"; do
   fi
 done
 
-echo "[stecore] Installing dependencies (if script exists)..."
+echo "[KaliForge] Installing dependencies (if script exists)..."
 if [ -x "$REPO_DIR/.local/bin/install-dependencies" ]; then
   "$REPO_DIR/.local/bin/install-dependencies"
 fi
 
-echo "[stecore] Symlinking dotfiles with stow..."
+echo "[KaliForge] Symlinking dotfiles with stow..."
 stow .
 
-echo "[stecore] Running additional setup scripts in .local/bin (if present)..."
+echo "[KaliForge] Running additional setup scripts in .local/bin (if present)..."
 for script in "$REPO_DIR/.local/bin/"*; do
   case "$(basename "$script")" in
   install-dependencies) ;; # already run
@@ -49,4 +52,8 @@ for script in "$REPO_DIR/.local/bin/"*; do
   esac
 done
 
-echo "[stecore] Setup complete! Log out and log back in to start using your new environment."
+echo ""
+echo "[KaliForge] Kali Linux setup complete!"
+echo "Please log out and log back in to start using your new Sway environment."
+echo "Your terminal will start Sway automatically on the first TTY."
+echo ""

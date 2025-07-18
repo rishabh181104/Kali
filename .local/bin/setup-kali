@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+# Kali Linux specific setup script
+# This script sets up additional configurations for Kali Linux
+
+set -e
+
+# Color variables
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+echo -e "${CYAN}Setting up Kali Linux specific configurations...${NC}"
+
+# Create necessary directories
+mkdir -p ~/.config/systemd/user
+mkdir -p ~/.local/share/applications
+mkdir -p ~/.cache/wal
+
+# Set up display manager session for Sway
+echo -e "${YELLOW}Setting up Sway session...${NC}"
+if [ ! -f /usr/share/wayland-sessions/sway.desktop ]; then
+    sudo tee /usr/share/wayland-sessions/sway.desktop > /dev/null <<EOF
+[Desktop Entry]
+Name=Sway
+Comment=An i3-compatible Wayland compositor
+Exec=sway
+Type=Application
+EOF
+fi
+
+# Set up environment variables for Wayland
+echo -e "${YELLOW}Setting up Wayland environment...${NC}"
+if [ ! -f ~/.config/environment.d/wayland.conf ]; then
+    mkdir -p ~/.config/environment.d
+    tee ~/.config/environment.d/wayland.conf > /dev/null <<EOF
+# Wayland environment variables
+QT_QPA_PLATFORM=wayland
+GDK_BACKEND=wayland
+XDG_SESSION_TYPE=wayland
+XDG_CURRENT_DESKTOP=sway
+_JAVA_AWT_WM_NONREPARENTING=1
+EOF
+fi
+
+# Set up user systemd service for sway
+echo -e "${YELLOW}Setting up systemd user service...${NC}"
+tee ~/.config/systemd/user/sway.service > /dev/null <<EOF
+[Unit]
+Description=Sway window manager
+Documentation=man:sway(5)
+BindsTo=graphical-session.target
+Wants=graphical-session-pre.target
+After=graphical-session-pre.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/sway
+Restart=on-failure
+RestartSec=1
+TimeoutStopSec=10
+EOF
+
+# Enable the service
+systemctl --user enable sway.service 2>/dev/null || true
+
+# Fix permissions
+chmod +x ~/.local/bin/sway-workspaces
+chmod +x ~/.config/polybar/launch.sh
+chmod +x ~/.config/sway/animations.sh
+
+# Create default wallpaper if it doesn't exist
+if [ ! -f ~/.config/wallpaper.jpg ]; then
+    echo -e "${YELLOW}Creating default wallpaper...${NC}"
+    # Create a simple gradient wallpaper
+    if command -v convert >/dev/null 2>&1; then
+        convert -size 1920x1080 gradient:#1a1a1a-#2d2d2d ~/.config/wallpaper.jpg
+    else
+        echo -e "${RED}ImageMagick not found. Please add your own wallpaper to ~/.config/wallpaper.jpg${NC}"
+        # Create a placeholder file
+        touch ~/.config/wallpaper.jpg
+    fi
+fi
+
+# Initialize pywal with default colors
+echo -e "${YELLOW}Initializing pywal...${NC}"
+if command -v wal >/dev/null 2>&1; then
+    if [ -f ~/.config/wallpaper.jpg ]; then
+        wal -i ~/.config/wallpaper.jpg -n
+    else
+        # Create default colors
+        mkdir -p ~/.cache/wal
+        echo '{"wallpaper": "~/.config/wallpaper.jpg", "alpha": "100"}' > ~/.cache/wal/colors.json
+    fi
+fi
+
+# Set up git configuration if not already done
+if [ ! -f ~/.gitconfig ]; then
+    echo -e "${YELLOW}Setting up Git configuration...${NC}"
+    echo "Please enter your Git username:"
+    read -r git_username
+    echo "Please enter your Git email:"
+    read -r git_email
+    
+    git config --global user.name "$git_username"
+    git config --global user.email "$git_email"
+    git config --global init.defaultBranch main
+fi
+
+# Create desktop entry for better integration
+echo -e "${YELLOW}Creating desktop entries...${NC}"
+tee ~/.local/share/applications/sway.desktop > /dev/null <<EOF
+[Desktop Entry]
+Type=Application
+Name=Sway
+Comment=Tiling Wayland compositor
+Exec=sway
+Icon=sway
+Terminal=false
+Categories=System;
+EOF
+
+echo -e "${GREEN}Kali Linux setup complete!${NC}"
+echo -e "${CYAN}Remember to:${NC}"
+echo -e "  1. Log out and log back in"
+echo -e "  2. Select Sway from the login manager"
+echo -e "  3. Or run 'sway' from TTY1"
+echo -e "${YELLOW}Enjoy your new Sway environment on Kali Linux!${NC}"

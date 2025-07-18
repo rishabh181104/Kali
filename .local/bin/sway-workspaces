@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Sway workspace script for polybar
+# Displays current workspaces with icons and focus indication
+
+# Function to get workspace info
+get_workspaces() {
+    swaymsg -t get_workspaces | jq -r '.[] | select(.output != null) | "\(.name)|\(.focused)|\(.urgent)"' | sort -n
+}
+
+# Function to format workspace output
+format_workspace() {
+    local ws_name="$1"
+    local is_focused="$2"
+    local is_urgent="$3"
+    
+    # Extract workspace number and icon
+    local ws_num=$(echo "$ws_name" | cut -d: -f1)
+    local ws_icon=$(echo "$ws_name" | cut -d: -f2)
+    
+    # Set colors based on state
+    if [[ "$is_urgent" == "true" ]]; then
+        echo "%{F#d79921}$ws_icon%{F-}"
+    elif [[ "$is_focused" == "true" ]]; then
+        echo "%{F#cc241d}$ws_icon%{F-}"
+    else
+        echo "%{F#665c54}$ws_icon%{F-}"
+    fi
+}
+
+# Main function
+main() {
+    local output=""
+    
+    while IFS='|' read -r ws_name focused urgent; do
+        if [[ -n "$ws_name" ]]; then
+            formatted=$(format_workspace "$ws_name" "$focused" "$urgent")
+            output="$output $formatted"
+        fi
+    done < <(get_workspaces)
+    
+    echo "$output"
+}
+
+# Run in loop for polybar tail mode
+while true; do
+    main
+    sleep 1
+done
